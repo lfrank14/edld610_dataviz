@@ -1,0 +1,16 @@
+---
+title: "Week 7 Lecture Notes"
+author: "Lea Frank"
+date: "2/18/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+install.packages("ggthemesassist")
+
+devtools::install_github("wilkelab/ungeviz")
+# Should check this out as they have some cool functions, like specifying boot-strapping on geom_smooth
+```
+

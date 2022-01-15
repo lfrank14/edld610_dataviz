@@ -1,0 +1,43 @@
+---
+title: "Week6 lecture"
+author: "Lea Frank"
+date: "2/11/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(ggplot2)
+
+# preview a file that would be created by ggsave()
+ggpreview <- function(...) {
+  fname <- tempfile(fileext = ".png")
+  ggsave(filename = fname, ...)
+  system2("open", fname)
+  invisible(NULL)
+}
+
+ggplot(mtcars) + 
+  aes(x = wt, y = mpg) + 
+  geom_point(size = 6) +
+  theme_minimal(base_size = 48)
+
+ggpreview(width = 36, height = 36, units = "in")
+
+```
+
+```{r}
+library(scales)
+```
+
+```{r}
+remotes::install_github("clauswilke/dviz.supp")
+head(tech_stocks)
+
+theme_set(theme_minimal())
+
+```
+

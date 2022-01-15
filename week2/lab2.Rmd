@@ -1,0 +1,145 @@
+---
+title: "Lab 2"
+author: "Lea Frank"
+date: "1/20/2019"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+## 1. Write the code to load the data in directly from the web. 
+
+```{r load_data}
+df <- rio::import("https://github.com/fivethirtyeight/data/raw/master/alcohol-consumption/drinks.csv")
+
+```
+
+## 2. Explore the overall distribution of total alcohol consumed.
+
+### Histogram
+
++ play with number of bins
++ settle on number of bins and provide brief justification in text
+
+```{r histograms}
+ggplot(df, aes(x = total_litres_of_pure_alcohol)) +
+  geom_histogram(color = "white") +
+  theme_minimal() 
+
+ggplot(df, aes(x = total_litres_of_pure_alcohol)) +
+  geom_histogram(bins = 50, color = "white") +
+  theme_minimal() 
+
+ggplot(df, aes(x = total_litres_of_pure_alcohol)) +
+  geom_histogram(bins = 10, color = "white") +
+  theme_minimal() 
+
+ggplot(df, aes(x = total_litres_of_pure_alcohol)) +
+  geom_histogram(bins = 20, color = "white") +
+  theme_minimal() 
+
+ggplot(df, aes(x = total_litres_of_pure_alcohol)) +
+  geom_histogram(bins = 40, color = "white") +
+  theme_minimal() 
+
+ggplot(df, aes(x = total_litres_of_pure_alcohol)) +
+  geom_histogram(bins = 70, color = "white") +
+  theme_minimal() 
+
+```
+
+I originally thought 40 or 50 bins was the right amount to show the distribution because it really captures the postive skew and the mode of alcohol consumed around 0. However, I then changed the color outline to white and saw the individual bars much better. I think the default bin count of 30 captures both the skew and mode just fine. 
+
+### Density plot
+
++ compare the default bandwidth with a few other selections entered manually
++ settle on a bandwidth selection, and justify why briefly in text
+
+```{r density_plots}
+ggplot(df, aes(x = total_litres_of_pure_alcohol)) +
+  geom_density(fill = "#2980B9", alpha = .7) +
+  theme_minimal()
+
+ggplot(df, aes(x = total_litres_of_pure_alcohol)) +
+  geom_density(fill = "#2980B9", alpha = .7, bw = 1) +
+  theme_minimal()
+
+ggplot(df, aes(x = total_litres_of_pure_alcohol)) +
+  geom_density(fill = "#2980B9", alpha = .7, bw = .5) +
+  theme_minimal()
+
+ggplot(df, aes(x = total_litres_of_pure_alcohol)) +
+  geom_density(fill = "#2980B9", alpha = .7, bw = 2) +
+  theme_minimal()
+
+```
+
+The default bandwidth (was not sure how to find the default, but I figure its around 1) is perfect for capturing the positive skew and the mode around 0, as well as the few peaks that occcur above the mode.
+
+## 3. Reorganize the data so you have a `type` and `servings` column.
+
+```{r reorganize_df}
+df_tidy <- df %>% 
+  gather(key = type, value = servings, 2:4) 
+
+# Check the order of the types when I factor so I know what order to label them
+levels(factor(df_tidy$type))
+
+df_tidy$type <- factor(df_tidy$type, labels = c("Beer","Spirit","Wine"))
+
+```
+
+#### Evaluate the distribution of servings by type using at least three different methods. Provide a brief substantive conclusion.
+
+```{r servings_by_type}
+ggplot(df_tidy, aes(x = servings)) +
+  geom_histogram(color = "white", bins = 20) +
+  theme_minimal() +
+  facet_wrap(~type)
+
+ggplot(df_tidy, aes(x = servings, fill = type, color = type)) +
+  geom_density(alpha = .3) +
+  theme_minimal() +
+  scale_fill_brewer(palette = "Set1") +
+  scale_color_brewer(palette = "Set1")
+
+ggplot(df_tidy, aes(x = servings, y = type)) +
+  ggridges::geom_density_ridges(fill = "#2980B9", alpha = .4) +
+  theme_minimal()
+```
+
+The average number of servings of alcohol consumed in 2010 was positively skewed regardless of the type of alcohol, with most people consuming under 50 servings. However, the number of people consuming less than 50 servings of wine each year was much higher than those consuming under 50 servings of beer and spirits. The number of servings of wine did not vary much in comparison either. Though the distribution of beer and spirit consumption was similar, there was a second peak of beer consumption around 200-250 servings.
+
+#### Reproduce the plot (servings by type per country)
+
+```{r reproduce_plot}
+# need to filter total alcohol consumption to top 25
+df_top25 <- df %>% 
+  arrange(desc(total_litres_of_pure_alcohol)) %>% 
+  slice(1:25)
+
+# put in tidy format
+df_top25_tidy <- df_top25 %>%
+  gather(key = type, value = servings, 2:4)
+
+df_top25_tidy$type <- factor(df_top25_tidy$type, labels = c("Beer", "Spirit", "Wine"))
+  
+
+ggplot(df_top25_tidy, aes(x = fct_reorder(country, servings), y = servings)) +
+  geom_bar(stat = "identity", 
+           fill = "#56B4E9", color = "white", alpha = .7) +
+  coord_flip() +
+  labs(title = "Countries with the highest alcohol consumption",
+       subtitle = "Top 25 countries displayed",
+       x = "Country",
+       y = "Total number of alcohol servings") +
+  theme_minimal() +
+  facet_wrap(~type)
+  
+```
+

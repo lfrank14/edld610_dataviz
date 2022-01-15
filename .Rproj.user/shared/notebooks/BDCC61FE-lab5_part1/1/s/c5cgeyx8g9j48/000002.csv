@@ -1,0 +1,2 @@
+"0","states <- rio::import(""states_all.csv"") %>% "
+"0","  janitor::clean_names()"

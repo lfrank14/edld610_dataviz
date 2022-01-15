@@ -1,0 +1,11 @@
+"0","region_avg <- states_tidy %>% "
+"0","  group_by(region, source, year) %>% "
+"0","  summarize(avg_revenue = mean(revenue, na.rm = TRUE),"
+"0","            min_rev = min(revenue),"
+"0","            max_rev = max(revenue)) %>% "
+"0","  right_join(state_labels)"
+"2","Joining, by = ""region""
+"
+"0","states_tidy <- left_join(states_tidy, region_avg)"
+"2","Joining, by = c(""state"", ""region"", ""year"", ""source"")
+"

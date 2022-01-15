@@ -1,0 +1,7 @@
+"0","# Will only plot the 50 states since I'm assuming funding for US territories is different. "
+"0","# Excluding District of Columbia since the funding will also not be comparable to state-level funding. "
+"0","state_labels <- tibble(state = state.name, region = state.region)"
+"0","state_labels$region <- factor(state_labels$region, "
+"0","                              levels = c(""North Central"", ""Northeast"", ""South"", ""West""))"
+"0","states_tidy <- left_join(state_labels, states_tidy, by = ""state"") "
+"0","#unique(states_tidy$state)"

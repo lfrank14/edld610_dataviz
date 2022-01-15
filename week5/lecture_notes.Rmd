@@ -1,0 +1,35 @@
+---
+title: "Week 5 Lecture Notes"
+author: "Lea Frank"
+date: "2/4/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+
+# devtools::install_github("wilkelab/cowplot")
+# install.packages("colorspace", repos = "http://R-Forge.R-project.org")
+# devtools::install_github("clauswilke/colorblindr")
+```
+
+```{r}
+install.packages("rtweet")
+library(rtweet)
+
+superbowl <- rtweet::search_tweets("superbowl", n = 10000, include_rts = FALSE)
+
+library(tidytext)
+
+superbowl_tidy <- superbowl %>% 
+  select(text) %>% 
+  unnest_tokens(word, text, token = "words") %>% 
+  anti_join(stop_words)
+
+superbowl_tidy %>%
+  group_by(word) %>% 
+  count(sort = TRUE)
+```
+
+

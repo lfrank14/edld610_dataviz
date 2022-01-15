@@ -1,0 +1,121 @@
+---
+title: "Lab 5. Part 1"
+author: "Lea Frank"
+date: "2/17/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(paletteer)
+```
+
+Your colleague wants to explore differences in revenue over time by state. They have worked really hard but so far the best they’ve come up with is the below, which they feel is still not satistifactory. Your goal here is to help your colleague improve their plot.
+
+Start a new R Markdown file and load the states_all.csv file.
+
+```{r load_data}
+states <- rio::import("states_all.csv") %>% 
+  janitor::clean_names()
+```
+
+### 1. In a new code chunk (separate from the chunk you used to import the data) reproduce the plot.
+
+```{r tidy_data}
+states_tidy <- states %>% 
+  select(state, year, contains("revenue")) %>% 
+  gather(key = "source", value = "revenue", -1:-2) %>% 
+  filter(source != "total_revenue")
+
+levels(factor(states_tidy$source))
+states_tidy$source <- factor(states_tidy$source, labels = c("Federal", "Local", "State"))
+
+states_tidy$state <- str_replace_all(states_tidy$state, "_", " ")
+states_tidy$state <- str_to_title(states_tidy$state)
+
+```
+
+
+```{r reproduce_plot}
+states_tidy %>% 
+  ggplot(aes(x = year, y = revenue, color = state)) +
+  geom_line() +
+  facet_wrap(~source) +
+  theme_minimal()
+```
+
+
+### 2. Briefly Explain (outside the code chunk) a few things that could be done to improve the plot, and why. I’m less interested in the code here and more interested in why you feel the changes would improve the plot.
+
+First of all, I think the lines should only be for the states and the non-state categories should be filtered out. I also think it would look nice to revise the numbers on the y-axis to be in terms of dollars. Over plotting is definitely an issue and might be easier to read if they were summarized by region (e.g. northeast, northwest, etc.). The ratio of the y to x axis is a little too narrow for the amount of time that is included in the data. This would also make the increases look less dramatic and more comparable across the years. 
+
+
+### 3. In a new code chunk, make at least 3 revisions to the plot that you suggested above.
+
++ remove the non-state lines (DONE)
++ scale by region (DONE)
++ add $ to y axis (DONE)
+
+```{r remove_nonstates}
+# Will only plot the 50 states since I'm assuming funding for US territories is different. 
+# Excluding District of Columbia since the funding will also not be comparable to state-level funding. 
+
+state_labels <- tibble(state = state.name, region = state.region)
+
+state_labels$region <- factor(state_labels$region, 
+                              levels = c("North Central", "Northeast", "South", "West"))
+
+states_tidy <- left_join(state_labels, states_tidy, by = "state") 
+
+
+#unique(states_tidy$state)
+
+```
+
+```{r summarize_region}
+region_avg <- states_tidy %>% 
+  group_by(region, source, year) %>% 
+  summarize(avg_revenue = mean(revenue, na.rm = TRUE)) %>% 
+  right_join(state_labels)
+
+
+states_tidy <- left_join(states_tidy, region_avg)
+
+```
+
+```{r color_region}
+state_labels %>% 
+  count(region)
+
+color_region <- c(paletteer_dynamic(cartography, orange.pal, n = 12),
+                      paletteer_dynamic(cartography, blue.pal, n = 9),
+                      paletteer_dynamic(cartography, green.pal, n = 16),
+                      paletteer_dynamic(cartography, sand.pal, n = 13))
+
+colors_nc <- paletteer_dynamic(cartography, orange.pal, n = 12)
+colors_ne <- paletteer_dynamic(cartography, blue.pal, n = 9)
+colors_s <- paletteer_dynamic(cartography, green.pal, n = 16)
+color_w <- paletteer_dynamic(cartography, sand.pal, n = 13)
+```
+
+
+```{r}
+state_order <- state_labels %>% 
+  arrange(region) %>% 
+  select(state)
+
+states_tidy %>% 
+  ggplot(aes(x = year, y = revenue)) +
+  geom_line(aes(color = factor(state, levels = state_order$state)), alpha = .5) +
+  geom_line(aes(y = avg_revenue), color = "black") +
+  theme_minimal() +
+  facet_grid(source ~ region) +
+  scale_y_log10(labels = scales::dollar) +
+  scale_color_manual(values = color_region, guide = "none") +
+  labs(x = NULL, y = "Annual Revenue",
+       title = "Annual Revenue by US Region and State")
+
+```
+
+
